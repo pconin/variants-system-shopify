@@ -1,0 +1,277 @@
+<style>
+/* Product options button exception */
+.product-container form.product-form .productOptions .btn-group>.btn:not(:first-child):not(:last-child):not(.dropdown-toggle){
+	-moz-border-radius: unset;
+	border-radius: unset;
+}
+
+.product-container form.product-form .productOptions .btn-group>.btn:first-child:not(:last-child):not(.dropdown-toggle) {
+	border-top-right-radius: unset;
+	border-bottom-right-radius: unset;
+}
+
+.hidden{
+	display : none;
+}
+
+/* Button product */
+label.btn {
+	width: auto;
+	display: inline-block;
+	white-space: normal;
+	background: #fff;
+	color: black;
+	border-radius: 0;
+	border: 1px solid black;
+	line-height: 26px;
+}
+label.btn.active, label.btn.focus{
+	background: #a1a5b6;
+	color: #fff !important;
+	outline: 0;
+	-webkit-box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+	box-shadow: inset 0 3px 5px rgba(0,0,0,.125)
+}
+
+.btn-group-vertical>.btn, .btn-group>.btn {
+	margin-top : 10px;
+}
+
+.btn-group-vertical>.btn.shoeSize, .btn-group>.btn.shoeSize{
+	width : 60px;
+}
+
+.cartFormContainer{
+	display : flex;
+	flex-direction : column-reverse;
+}
+</style>
+<form action="/cart/add" method="post" data-cart-submit class="product-form">
+
+	{% comment %}
+	Les couleurs sont maintenant gérées dans les variantes et non plus dans les tags.
+	{% if color %}
+	<div class="product-details-title">{% include 'LS_180694025_locales', LS_locales_item: 'product.color_title',   %}{% if LS_180694025_locales_value == '' %}{{ 'product.color_title' | t }}{% else %}{{ LS_180694025_locales_value  }}{% endif %}</div>
+	<ul id="filter_color" class="list-unstyled filter-colors">
+	{% include 'product_colors' %}
+</ul>
+{% endif %}
+{% endcomment %}
+<!---- Zerance ----->
+{% assign size_selector = false %}
+{% for option in product.options %}
+{% if forloop.length == 1 and option == 'Size' and product.variants.first.title != 'Default Title' %}
+{% assign size_selector = true %}
+{% break %}
+{% endif %}
+{% endfor %}
+<p id="message"></p>
+{% if size_selector %}
+<div class="product-details-title">
+	{% include 'LS_180694025_locales', LS_locales_item: 'product.size_title',   %}{% if LS_180694025_locales_value == '' %}{{ 'product.size_title' | t }}{% else %}{{ LS_180694025_locales_value  }}{% endif %}
+	<span class="size-guide-link" id="size_guide_link"> <a href="#" class="lighter"  data-toggle="modal" data-target="#sizeGuide">({% include 'LS_180694025_locales', LS_locales_item: 'product.size_guide_link',   %}{% if LS_180694025_locales_value == '' %}{{ 'product.size_guide_link' | t }}{% else %}{{ LS_180694025_locales_value  }}{% endif %})</a></span>
+</div>
+<div class="btn-group btn-radio-group" data-toggle="buttons">
+	{% for variant in product.variants %}
+	{% if forloop.length > 1 %}
+	<label class="btn radio-btn size-selector{% unless variant.available %} disabled{% endunless %}" id="size_select{{ forloop.index }}" data-price='{% if LS_180694025_curr and shop.metafields.langshop['currSwitcherType'] and shop.metafields.langshop['currSwitcherType'] != "disabled" %}{% include 'LS_180694025_curr_converter', LS_price: variant.price, LS_format: 'money' %}{{ LS_180694025_curr_converter }}{% else %}{{ variant.price | money }}{% endif %}'>
+		<input type="radio" name="id" value="{{ variant.id }}" id="option{{ forloop.index}}" autocomplete="off"{% unless variant.available %} disabled{% endunless %} required>
+		<span class="labelling">{{ variant.title }}</span>
+	</label>
+	{% else %}
+	<label class="btn radio-btn size-selector{% unless variant.available %} disabled{% endunless %}" id="size_select{{ forloop.index }}" data-price='{% if LS_180694025_curr and shop.metafields.langshop['currSwitcherType'] and shop.metafields.langshop['currSwitcherType'] != "disabled" %}{% include 'LS_180694025_curr_converter', LS_price: variant.price, LS_format: 'money' %}{{ LS_180694025_curr_converter }}{% else %}{{ variant.price | money }}{% endif %}'>
+		<input type="radio" name="id" value="{{ variant.id }}" id="option{{ forloop.index}}" autocomplete="off"{% unless variant.available %} disabled{% endunless %} required checked>
+		<span class="labelling">{{ variant.title }}</span>
+	</label>
+	{% endif %}
+	{% endfor %}
+</div>
+{% else %}
+
+<div class="cartFormContainer">
+	{% for option in product.options %}
+	<div>
+		<div class="product-details-title{% if product.has_only_default_variant %} hidden{% endif %}">
+			{{ option }}
+		</div>
+		<div class="container productOptions">
+			<div id="tab{{ forloop.index0 }}" class="btn-group" data-toggle="buttons">
+			</div>
+		</div>
+	</div>
+
+
+	{% endfor %}
+</div>
+<!-- Hidden div which contain the SKU value and price -->
+<select name="id" class="hidden single-option-selector single-option-selector product-form__input">
+	<option id="productSelect" data-sku="{{ product.variants[0].sku }}" value="{{ product.variants[0].id }}" data-price="{{ product.variants[0].price }}" data-price-display="{{ product.variants[0].price | money }}"{% if product.variants[0] == product.selected_or_first_available_variant %} selected="selected" {% endif %}>{{ product.variants[0].title }}</option>
+</select>
+
+{% endif %}
+<br/>
+<div class="product-form--submit">
+	{% if product.available %}
+	{% include 'LS_180694025_options', product: product %}
+	<button type="submit" name="add" id="AddToCart" class="btn product-form--cart-submit">
+		<span id="AddToCartText">
+			{% include 'LS_180694025_locales', LS_locales_item: 'product.add_to_cart',   %}{% if LS_180694025_locales_value == '' %}{{ 'product.add_to_cart' | t }}{% else %}{{ LS_180694025_locales_value  }}{% endif %}
+		</span>
+	</button>
+	{% else %}
+	{% include 'LS_180694025_options', product: product %}
+	<button type="submit" name="add" id="AddToCart" class="btn product-form--cart-submit" disabled>
+		<span id="AddToCartText">
+			{% include 'LS_180694025_locales', LS_locales_item: 'product.sold_out',   %}{% if LS_180694025_locales_value == '' %}{{ 'product.sold_out' | t }}{% else %}{{ LS_180694025_locales_value  }}{% endif %}
+		</span>
+	</button>
+	{% endif %}
+</div>
+</form>
+<!---- Zerance ----->
+<script>
+$(function() {
+	var product = {{ product | json }};
+	var variants = product.variants;;
+
+	var isSize = ((parseInt(variants[0].option1) || variants[0].option1.length < 4 )? true : false);
+
+	var updateSKU = function(variant){
+		$("#productSelect").attr("data-sku", variant.sku);
+		$("#productSelect").attr("value", variant.id);
+		$("#productSelect").attr("data-price", variant.price);
+		$("#productSelect").attr("data-price-display", variant.id);
+		$("#productSelect").text(variant.title);
+	}
+
+	// Si 2 options
+	if(product.options[1]){
+
+		var option2 = product.options[0];
+		var option1 = product.options[1];
+		var defaut = null;
+
+		var objectByOne = {};
+		var objectByTwo = {};
+
+
+		console.log('is size : ' , isSize);
+		console.log(variants);
+		// Créé une map couleur > size du produit
+		for(var i = 0; i < variants.length; i++){
+			if(!objectByOne[variants[i].option2]){
+				objectByOne[variants[i].option2] = {};
+				for(var j = 0; j < variants.length; j++){
+					if(variants[j].option2 === variants[i].option2){
+						if(!defaut) defaut = variants[j];
+						objectByOne[variants[i].option2][variants[j].option1] = variants[j];
+					}
+				}
+			}
+			// Créé une map size > color du produit
+			if(!objectByTwo[variants[i].option1]){
+				objectByTwo[variants[i].option1] = {};
+				for(var j = 0; j < variants.length; j++){
+					if(variants[j].option1 === variants[i].option1){
+						objectByTwo[variants[i].option1][variants[j].option2] = variants[j];
+					}
+				}
+			}
+		}
+
+		console.log('by one : ' , objectByOne)
+		console.log('by two : ' , objectByTwo)
+
+		var updateOne = function(oneId){
+			defaut.option2 = oneId;
+			var isActive = false;
+			var sizeActiveId = null;
+			console.log('Update one , id : '+ oneId);
+			$("#" + oneId.replace(/[^\w\s]/gi, '')).addClass('active');
+
+			if($("#tab0")) $("#tab0").empty();
+
+			var sortedArray = [];
+			for(var two in objectByOne[oneId]){
+				sortedArray.push([two, objectByOne[oneId][two]]);
+			}
+
+			console.log('Before sort' , sortedArray);
+			sortedArray.sort(function(a, b){
+				return parseFloat(a[0]) - parseFloat(b[0]);
+			})
+			console.log('After sort' , sortedArray);
+
+			var j = 1;
+			for(var k = 0; k < sortedArray.length; k++){
+
+				var twoId = sortedArray[k][0];
+				console.log('Two id' + twoId);
+				if(!isActive){
+					sizeActivateId = twoId;
+					defaut.option1 = twoId;
+				}
+				var htmlElements = '<label id="'+ twoId +'"class="sizeButton btn ' + (isSize ? ' shoeSize ' : '') + (isActive ? '' : ' active') +'"><input type="radio" class="sizeButton" name="options" id="input'+ twoId +'" autocomplete="off">'+ twoId + '</label>';
+				if(!(j % 7)) htmlElements += '<div></div>';
+				if($("#tab0")) $("#tab0").append(htmlElements);
+
+				isActive = true;
+				j++;
+			}
+
+
+
+			$(".sizeButton").click(function(){
+				updateSKU(objectByOne[defaut.option2][$( this ).attr('id')]);
+			});
+			updateSKU(objectByOne[oneId][sizeActivateId]);
+
+
+		};
+
+		// On génère les boutons
+		console.log(objectByOne);
+		for(var color in objectByOne){
+			if($("#tab1")) $("#tab1").append('<label data-color="' + color + '"id="'+ color.replace(/[^\w\s]/gi, '') +'" class="btn colorButton"><input type="radio" class="colorButton" name="options" id="input'+ color +'" autocomplete="off">'+ color + '</label>');
+		}
+
+		var j = 0;
+		for(var two in objectByTwo){
+			console.log(two);
+			var htmlElements = '<label id="'+ two +'"class="btn sizeButton"><input type="radio" class="sizeButton" name="options" id="input'+ two +'" autocomplete="off">'+ two + '</label>';
+			if(!(j % 7)) htmlElements += '<div></div>';
+			if($("#tab0")) $("#tab0").append(htmlElements);
+			j++;
+		}
+
+		$(".colorButton").click(function(){
+			updateOne($( this ).attr('data-color'));
+		});
+
+		$(".sizeButton").click(function(){
+			updateSKU(objectByOne[defaut.option1][$( this ).attr('id')]);
+		});
+
+		// On set les 2 premiers à Active
+		updateOne(defaut.option2);
+		// Si 1 option
+	}else{
+		var option1 = product.options[0];
+		var variantsObject = {}
+
+
+		for(var i = 0; i < variants.length; i++){
+			var variant = variants[i];
+			$("#tab0").append('<label data-id="' + variant.id + '"id="'+ variant.id +'" class="btn '+(isSize ? 'shoeSize ' : '')+' colorButton"><input type="radio" class="colorButton" name="options" id="input'+ variant.id +'" autocomplete="off">'+ variant.option1 + '</label>');
+			variantsObject[variant.id] = variant;
+		}
+
+		updateSKU(variants[0]);
+
+		$(".colorButton").click(function(){
+			updateSKU(variantsObject[$( this ).attr('id')]);
+		});
+
+	}
+});
+</script>
